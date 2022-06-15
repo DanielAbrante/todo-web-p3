@@ -30,6 +30,15 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const signUp = async ({ name, email, password }) => {
+    try {
+      await api.post("users", { name, email, password });
+    } catch (error) {
+      console.log(error);
+      throw new Error("Falha em criar usuário");
+    }
+  };
+
   const signOut = async () => {
     try {
       await api.post("users/logout");
@@ -52,6 +61,7 @@ const AuthProvider = ({ children }) => {
         user: data.user,
         signIn,
         signOut,
+        signUp,
         isAuthenticated,
       }}
     >

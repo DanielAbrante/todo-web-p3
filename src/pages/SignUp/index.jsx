@@ -1,24 +1,88 @@
-import { useRef } from "react";
-import { Link } from "react-router-dom";
+import { useRef, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Template from "../../containers/Template";
+import { useAuth } from "../../hooks/useAuth";
 
 import styles from "./SignUp.module.scss";
+import Swal from "sweetalert2";
 
 const SignUp = () => {
+  const { signUp, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
+
   const nameInputRef = useRef();
   const ageInputRef = useRef();
   const emailInputRef = useRef();
   const passwordInputRef = useRef();
   const passwordConfirmationInputRef = useRef();
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
     console.table({
       name: nameInputRef.current.value,
       age: ageInputRef.current.value,
       email: emailInputRef.current.value,
       password: passwordInputRef.current.value,
       confirmation: passwordConfirmationInputRef.current.value,
+    });
+
+    if (
+      !nameInputRef.current ||
+      !emailInputRef.current ||
+      !passwordInputRef.current
+    ) {
+      return;
+    }
+
+    const name = nameInputRef.current.value.trim();
+    const email = emailInputRef.current.value.trim();
+    const password = passwordInputRef.current.value.trim();
+    const password_confirmation =
+      passwordConfirmationInputRef.current.value.trim();
+
+    if (!name || !email || !password || !password_confirmation) {
+      return;
+    }
+
+    if(password.length < 6) {
+      return alert("A senha deve conter pelo menos 6 caracteres");
+    }
+
+    if (password_confirmation !== password) {
+      return alert("A senha de confirmação deve ser igual a senha");
+    }
+
+    Swal.fire({
+      title: "Deseja criar um usuário?",
+      showDenyButton: true,
+      showCancelButton: false,
+      confirmButtonText: "Sim",
+      denyButtonText: `Não`,
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await signUp({ name, email, password });
+          Swal.fire({
+            position: "top-end",
+            toast: true,
+            icon: "success",
+            title: "Usuário criado com sucesso",
+            showConfirmButton: false,
+            timer: 3000,
+          });
+        } catch (error) {
+          alert("email ou senha inválidos");
+        }
+
+        navigate("/home");
+      }
     });
   };
 
